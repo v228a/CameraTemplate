@@ -1,10 +1,12 @@
 package com.vovka.cameratemplate
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract.Directory
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.snackbar.Snackbar
 import com.vovka.cameratemplate.databinding.ActivityMainBinding
 import java.io.File
 import java.text.SimpleDateFormat
@@ -76,17 +79,28 @@ class MainActivity : AppCompatActivity() {
         )
 
         val outputOption = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        //TODO not working on the emulator (Pixel API 29), on real device working is good
         imageCapture.takePicture(
             outputOption, ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     val savedUri = Uri.fromFile(photoFile)
-                    Log.d(Constants.TAG, "Файл сохранен: $savedUri")
+                   Log.d(Constants.TAG, "File saved: $savedUri")
+                    Snackbar
+                        .make(binding.root, "File saved: $savedUri\"", Snackbar.LENGTH_SHORT)
+                        .setAction("View", View.OnClickListener {
+                            val intent = Intent(this@MainActivity, ImageActivity::class.java).apply {
+                                putExtra("photo_uri", savedUri.toString())
+                            }
+                            startActivity(intent)
+                        })
+
+                        .show()
                     Toast.makeText(this@MainActivity, "Photo Saved: $savedUri", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onError(exception: ImageCaptureException) {
-                    Log.e(Constants.TAG, "Ошибка сохранения: ${exception.message}", exception)
+                    Log.e(Constants.TAG, "Error saved: ${exception.message}", exception)
                 }
             }
         )
